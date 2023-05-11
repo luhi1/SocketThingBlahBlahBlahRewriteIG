@@ -25,6 +25,7 @@ public class Server{
     private ServerSocket serverSocket;
     private ArrayList<String> clientIPs;
     private ArrayList<String> hostIPs;
+    //hashmap
     public static final int serverPort = 6666;
     
     public Server(int port) {
@@ -73,38 +74,60 @@ public class Server{
                 this.clientIP = clientServerSocket.getInetAddress().getHostAddress();
         }
 
-        public void start(){
+        public void readServerClientRequestsAndRespond(){
                 try {
                         messagesOut = new PrintWriter(clientServerSocket.getOutputStream(), true);
                         messagesIn = new BufferedReader(new InputStreamReader(clientServerSocket.getInputStream()));
 
                         messagesOut.println("Welcome to the rodeo! \n Type \"list\" to view the list of games, type \"quit\" to exit, or type \"host\" to host a game!");
-                        String hostClientRequests = messagesIn.readLine(); 
-                        
-                        while (hostClientRequests == null || (!hostClientRequests.contains("Join: ") || !hostClientRequests.equals("quit"))){
-                                if (hostClientRequests == null){
-                                        hostClientRequests = messagesIn.readLine(); 
-                                        continue;
-                                }
-                                switch (hostClientRequests){
-                                        case ("list"):
-                                                clientIPs.add(clientIP);
-                                                messagesOut.println("List of hosts you could join: WIP");
-                                                //Print out list of hosts.
-                                        case ("host"):
-                                                hostIPs.add(clientIPs.remove(clientIPs.indexOf(clientIP)));
-                                                new Host(clientSocket, 6666, createGame());
-                                                
-                                                break;
-                                }
-                        }
-                        clientIPs.remove(clientIP);
-                        messagesIn.close();
-                        messagesOut.close();        
+                        String hostClientRequests;
+                        do {
+                            hostClientRequests = messagesIn.readLine(); 
+                            
+                            if (hostClientRequests == null){
+                                hostClientRequests = messagesIn.readLine(); 
+                                continue;
+                            }
+
+                            switch (hostClientRequests){
+                                    case ("list"):
+                                            clientIPs.add(clientIP);
+                                            messagesOut.println("List of hosts you could join: WIP");
+                                            for (String currentIP : clientIPs){
+                                                messagesOut.println(currentIP);
+                                            }
+                                            //Print out list of hosts.
+                                    case ("host"):
+                                            hostIPs.add(clientIPs.remove(clientIPs.indexOf(clientIP)));
+                                            // @TODO new Host(hostClientRequests, Server.serverPort, createGame());
+                                    case ("quit"):
+                                            // @TODO implement
+                            }
+                            if (hostClientRequests.contains("Join: ")){
+                                // @TODO add this guy to the host's ip list and go crazy uhhh.
+                            }
+                            messagesOut.flush();
+                        } while (!hostClientRequests.contains("Join: ") || (!hostClientRequests.equals("host")) || !hostClientRequests.equals("quit"));      
+                        closeConnections();
                 } catch (Exception e) {
                         e.printStackTrace();
+                        closeConnections();
                         return;
                 }
+        }
+
+        private void closeConnections(){
+            try {
+                messagesOut.close();
+                messagesIn.close();
+                clientServerSocket.close();
+                clientIPs.remove(clientIP);
+                hostIPs.remove(clientIP)
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            
         }
     }
 }
