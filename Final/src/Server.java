@@ -31,29 +31,38 @@ public class Server{
     public Server(int port) {
         this.clientIPs = new ArrayList<String>();
         this.hostIPs = new ArrayList<String>();
-        this.serverSocket = null;
-    }
-
-    public void initServer(){
         try {
             serverSocket = new ServerSocket(serverPort);
         } catch (IOException e) {
             e.printStackTrace();
+            close();
         }
 
-        System.out.println("Waiting for client connections.");
+    }
+
+    public void initServer(){
         while (true) {
-            Socket newSocketConnection = null;
+            Socket newSocketConnection;
             try {
+                System.out.println("Waiting for client connections.");
                 newSocketConnection = serverSocket.accept();
             } catch (IOException e) {
                 System.out.println("I/O error: " + e);
+                close();
+                break;
             }
             // new thread for a client
             new ServerClientHandler(newSocketConnection).start();
         }
     }
 
+    private void close(){
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     /*
     private Game createGame() throws Exception{
         Game newGame;
@@ -63,71 +72,123 @@ public class Server{
     }
      */
 
-    public class ServerClientHandler extends Thread{
-        private Socket clientServerSocket;
-        private PrintWriter messagesOut;
-        private BufferedReader messagesIn;
+    private class ServerClientHandler extends Handler{
         private String clientIP;
 
         public ServerClientHandler(Socket socket){
-                this.clientServerSocket = socket;
-                this.clientIP = clientServerSocket.getInetAddress().getHostAddress();
+                super(socket);
+                this.clientIP = super.clientServerSocket.getInetAddress().getHostAddress();
         }
 
-        public void readServerClientRequestsAndRespond(){
+        protected void closeConnectionsAndRemoveIP(){
+            super.closeConnections();
+            clientIPs.remove(clientIP);
+            hostIPs.remove(clientIP);
+        }
+
+        public void readRequestAndRespond(){
                 try {
-                        messagesOut = new PrintWriter(clientServerSocket.getOutputStream(), true);
-                        messagesIn = new BufferedReader(new InputStreamReader(clientServerSocket.getInputStream()));
-
-                        messagesOut.println("Welcome to the rodeo! \n Type \"list\" to view the list of games, type \"quit\" to exit, or type \"host\" to host a game!");
-                        String hostClientRequests;
-                        do {
-                            hostClientRequests = messagesIn.readLine(); 
-                            
-                            if (hostClientRequests == null){
-                                hostClientRequests = messagesIn.readLine(); 
-                                continue;
-                            }
-
-                            switch (hostClientRequests){
-                                    case ("list"):
-                                            clientIPs.add(clientIP);
-                                            messagesOut.println("List of hosts you could join: WIP");
-                                            for (String currentIP : clientIPs){
-                                                messagesOut.println(currentIP);
-                                            }
-                                            //Print out list of hosts.
-                                    case ("host"):
-                                            hostIPs.add(clientIPs.remove(clientIPs.indexOf(clientIP)));
-                                            // @TODO new Host(hostClientRequests, Server.serverPort, createGame());
-                                    case ("quit"):
-                                            // @TODO implement
-                            }
-                            if (hostClientRequests.contains("Join: ")){
-                                // @TODO add this guy to the host's ip list and go crazy uhhh.
-                            }
+                    messagesOut.println("Welcome to the rodeo! \n Type \"list\" to view the list of games, type \"quit\" to exit, or type \"host\" to host a game!");
+                    String clientServerRequests;
+                    do {
+                        clientServerRequests = messagesIn.readLine(); 
+                
+                        if (!(clientServerRequests == null)){
                             messagesOut.flush();
-                        } while (!hostClientRequests.contains("Join: ") || (!hostClientRequests.equals("host")) || !hostClientRequests.equals("quit"));      
-                        closeConnections();
+
+                            if (!(clientServerRequests.contains("Join: "))){
+                                switch (clientServerRequests){
+                                    case "list":
+                                        clientIPs.add(clientIP);
+                                        for (String currentIP : clientIPs){
+                                            messagesOut.println(currentIP);
+                                        }
+                                        messagesOut.println("List of hosts you could join!");
+                                        
+                                    case "host":
+                                        hostIPs.add(clientIPs.remove(clientIPs.indexOf(clientIP)));
+                                        new ServerHostHandler(super.clientServerSocket);
+                                        Host uHost = new Host(clientServerSocket);
+                                        uHost.initHostServer();
+                                }
+                                messagesOut.flush();
+                            } else {
+                                // @TODO add this guy to the host's ip list and go crazy uhhh.
+                            } 
+                        } else {
+                            clientServerRequests = "null";
+                        }
+                    
+                    } while (clientServerRequests.equals("null") || (!clientServerRequests.contains("Join: ") && (!clientServerRequests.equals("host")) && (!clientServerRequests.equals("quit"))));      
+                        
+                    closeConnectionsAndRemoveIP();
                 } catch (Exception e) {
                         e.printStackTrace();
-                        closeConnections();
+                        closeConnectionsAndRemoveIP();
                         return;
                 }
         }
+    }
+    
+    private class ServerHostHandler extends Handler{
+        private String hostIP;
+        private ObjectOutputStream gameOut;
+        private ObjectInputStream gameIn;
 
-        private void closeConnections(){
+        public ServerHostHandler(Socket socket){
+                super(socket);
+                try {
+                    this.hostIP = super.clientServerSocket.getInetAddress().getHostAddress();
+                    gameOut = new ObjectOutputStream(super.clientServerSocket.getOutputStream());
+                    gameIn = new ObjectInputStream(super.clientServerSocket.getInputStream());
+
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+        }
+
+        protected void closeConnectionsAndGameStreamsAndRemoveIP(){
+            super.closeConnections();
+            clientIPs.remove(hostIP);
+            hostIPs.remove(hostIP);
             try {
-                messagesOut.close();
-                messagesIn.close();
-                clientServerSocket.close();
-                clientIPs.remove(clientIP);
-                hostIPs.remove(clientIP)
+                gameIn.close();
+                gameOut.close();
+
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            
+        }
+
+        public void readRequestAndRespond(){
+                try {
+                        messagesOut.println("Type \"start\" to start the game.");
+                        String hostServerRequests;
+                        do {
+                            hostServerRequests = messagesIn.readLine(); 
+                            
+                            if (hostServerRequests == null){
+                                hostServerRequests = messagesIn.readLine(); 
+                                continue;
+                            }
+
+                            messagesOut.flush();
+
+                            if (hostServerRequests.equalsIgnoreCase("start")){
+                                //Give host a game.
+                                //start the game and shit.
+                            } 
+                        } while (!hostServerRequests.equals("start"));      
+                        
+                        closeConnectionsAndGameStreamsAndRemoveIP();
+
+                } catch (Exception e) {
+                        e.printStackTrace();
+                        closeConnectionsAndGameStreamsAndRemoveIP();
+                        return;
+                }
         }
     }
 }
