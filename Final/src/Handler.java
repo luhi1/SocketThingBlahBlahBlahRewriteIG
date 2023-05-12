@@ -35,7 +35,7 @@ public abstract class Handler extends Thread{
 
     abstract void readRequestAndRespond();
     
-    public void start(){
+    public void run(){
         readRequestAndRespond();
     }
 }

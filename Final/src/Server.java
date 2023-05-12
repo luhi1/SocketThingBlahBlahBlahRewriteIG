@@ -52,7 +52,8 @@ public class Server{
                 break;
             }
             // new thread for a client
-            new ServerClientHandler(newSocketConnection).start();
+            ServerClientHandler newServerClientHandler = new ServerClientHandler(newSocketConnection);
+            new Thread(newServerClientHandler).start();
         }
     }
 
@@ -78,6 +79,7 @@ public class Server{
         public ServerClientHandler(Socket socket){
                 super(socket);
                 this.clientIP = super.clientServerSocket.getInetAddress().getHostAddress();
+                clientIPs.add(clientIP);
         }
 
         protected void closeConnectionsAndRemoveIP(){
@@ -87,46 +89,51 @@ public class Server{
         }
 
         public void readRequestAndRespond(){
-                try {
-                    messagesOut.println("Welcome to the rodeo! \n Type \"list\" to view the list of games, type \"quit\" to exit, or type \"host\" to host a game!");
-                    String clientServerRequests;
-                    do {
-                        clientServerRequests = messagesIn.readLine(); 
-                
-                        if (!(clientServerRequests == null)){
-                            messagesOut.flush();
+            try {
+                messagesOut.println("Welcome to the rodeo! \n Type \"list\" to view the list of games, type \"quit\" to exit, or type \"host\" to host a game!");
+                String clientServerRequests;
+                do {
+                    clientServerRequests = messagesIn.readLine(); 
+            
+                    if (clientServerRequests == null){
+                        continue;
+                    }
 
-                            if (!(clientServerRequests.contains("Join: "))){
-                                switch (clientServerRequests){
-                                    case "list":
-                                        clientIPs.add(clientIP);
-                                        for (String currentIP : clientIPs){
-                                            messagesOut.println(currentIP);
-                                        }
-                                        messagesOut.println("List of hosts you could join!");
-                                        
-                                    case "host":
-                                        hostIPs.add(clientIPs.remove(clientIPs.indexOf(clientIP)));
-                                        new ServerHostHandler(super.clientServerSocket);
-                                        Host uHost = new Host(clientServerSocket);
-                                        uHost.initHostServer();
-                                }
-                                messagesOut.flush();
-                            } else {
-                                // @TODO add this guy to the host's ip list and go crazy uhhh.
-                            } 
-                        } else {
-                            clientServerRequests = "null";
-                        }
+                    messagesOut.flush();
+
+                    System.out.println(clientServerRequests);
+                    if (clientServerRequests.contains("Join: ")){
+                        System.out.println("Join me!");
+                        break;
+                    }
+
+                    switch (clientServerRequests){
+                        case "list":
+                            for (String currentIP : clientIPs){
+                                messagesOut.println(currentIP);
+                            }
+                            messagesOut.println("List of hosts you could join!");
+                            break;
+                            
+                        case "host":
+                            System.out.println("Why is it here???");
+                            hostIPs.add(clientIPs.remove(clientIPs.indexOf(clientIP)));
+                            new ServerHostHandler(super.clientServerSocket);
+                            Host uHost = new Host(clientServerSocket);
+                            uHost.initHostServer();
+                            break;
+                    }
+
+                    messagesOut.flush();
+                                    
+                } while (clientServerRequests == null || (!clientServerRequests.contains("Join: ") && (!clientServerRequests.equals("host")) && (!clientServerRequests.equals("quit"))));      
                     
-                    } while (clientServerRequests.equals("null") || (!clientServerRequests.contains("Join: ") && (!clientServerRequests.equals("host")) && (!clientServerRequests.equals("quit"))));      
-                        
+                closeConnectionsAndRemoveIP();
+            } catch (Exception e) {
+                    e.printStackTrace();
                     closeConnectionsAndRemoveIP();
-                } catch (Exception e) {
-                        e.printStackTrace();
-                        closeConnectionsAndRemoveIP();
-                        return;
-                }
+                    return;
+            }
         }
     }
     

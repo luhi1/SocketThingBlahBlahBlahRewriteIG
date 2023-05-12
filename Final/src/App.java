@@ -6,6 +6,12 @@ public class App {
         myClient.sendMessage("null"," to host a game!");
         Scanner myScanner = new Scanner(System.in);
         myClient.sendMessage(myScanner.nextLine(), "List of hosts you could join!");
+        String resp;
+        do {
+            System.out.println("Type \"Join: \" followed by an ip address to join a game!");
+            resp = myScanner.nextLine();
+        } while (!resp.contains("Join: "));
+        myClient.sendMessage(resp, "");
         myScanner.close();
     }
 }
