@@ -37,6 +37,5 @@ public abstract class Handler extends Thread{
     
     public void start(){
         readRequestAndRespond();
-        System.out.println("why did you finish");
     }
 }

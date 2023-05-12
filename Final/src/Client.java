@@ -41,7 +41,6 @@ public class Client{
             e.printStackTrace();
             stop();
         }
-        stop();
     }
 
     public void stop(){
