@@ -22,36 +22,39 @@ public class Host{
     public Host(Socket socket){
         this.playerIPs = new ArrayList<String>();
         this.HostServerSocket = socket;
+        this.gameStarted = false;
 
         try {
             this.guess = "";
             messagesOut = new PrintWriter(HostServerSocket.getOutputStream(), true);
-            gameIn = new ObjectInputStream(HostServerSocket.getInputStream());
+            //gameIn = new ObjectInputStream(HostServerSocket.getInputStream());
+
         } catch (IOException e) {
-            e.printStackTrace();
+            e.printStackTrace(System.out);
             close();
         }
     }
 
     public void initHostServer(){
         try {
-            HostingSocket = new ServerSocket(Server.serverPort);
+            HostingSocket = new ServerSocket(Server.serverPort+1);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        System.out.println("Waiting for player connections.");
+        messagesOut.println("Waiting for player connections.");
         while (!gameStarted) {
             Socket newSocketConnection = null;
             try {
                 newSocketConnection = HostingSocket.accept();
             } catch (IOException e) {
-                System.out.println("I/O error: " + e);
+                e.printStackTrace();
                 close();
 
             }
             // new thread for a client
-            new HostClientHandler(newSocketConnection).start();
+            HostClientHandler newHostClientHandler = new HostClientHandler(newSocketConnection);
+            new Thread(newHostClientHandler).start();
         }
         close();
     }

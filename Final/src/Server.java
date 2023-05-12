@@ -100,10 +100,7 @@ public class Server{
                     }
 
                     messagesOut.flush();
-
-                    System.out.println(clientServerRequests);
                     if (clientServerRequests.contains("Join: ")){
-                        System.out.println("Join me!");
                         break;
                     }
 
@@ -116,10 +113,11 @@ public class Server{
                             break;
                             
                         case "host":
-                            System.out.println("Why is it here???");
                             hostIPs.add(clientIPs.remove(clientIPs.indexOf(clientIP)));
-                            new ServerHostHandler(super.clientServerSocket);
-                            Host uHost = new Host(clientServerSocket);
+                            //ServerHostHandler newServerHostHandler = new ServerHostHandler(super.clientServerSocket);
+                            //new Thread(newServerHostHandler).start();
+
+                            Host uHost = new Host(super.clientServerSocket);
                             uHost.initHostServer();
                             break;
                     }
