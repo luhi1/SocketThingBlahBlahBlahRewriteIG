@@ -21,6 +21,7 @@ public class Host extends Thread{
     public Host(Socket socket){
         this.playerIPs = new ArrayList<String>();
         this.HostServerSocket = socket;
+        playerIPs.add(HostServerSocket.getInetAddress().getHostAddress());
         this.gameStarted = false;
 
         try {
