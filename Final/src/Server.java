@@ -165,7 +165,7 @@ public class Server{
 
                             if (hostServerRequests.equalsIgnoreCase("start")){
                                 Game newGame = createGame();
-                                myHost.currentGame(newGame);    
+                                myHost.currentGame(newGame,0);    
                             } 
                         } while (!hostServerRequests.equals("start"));      
                         

@@ -7,14 +7,7 @@ public class Game implements Serializable{
     public static String[] hangmanParts = {"  O", "-----", "/|||\\", " / \\", "  X"};
     private String guessString;
     private String secretWord;
-
-    public Game(){
-        this.secretWord = "";
-        this.numGuesses = 0;
-        this.strikes = 0;
-        this.hangman = "";
-        this.guessString = "";
-    }
+    private String currentPlayer;
 
     public Game(String word) throws Exception{
         this.secretWord = word;
@@ -25,6 +18,11 @@ public class Game implements Serializable{
         for (int i = 0; i < secretWord.length(); ++i){
             this.guessString += "_ ";
         }
+        this.currentPlayer = "";
+    }
+
+    public void setCurrentPlayer(String player){
+        this.currentPlayer = player;
     }
 
     public void displayScreen() throws Exception{
@@ -52,7 +50,7 @@ public class Game implements Serializable{
         try {
             System.out.println("ìììììììììììììììììììììììììììììì");
 
-            System.out.printf("          Guesses: %d\n", this.numGuesses);
+            System.out.printf("CurrentPlayer: %s; Guesses: %d\n", this.currentPlayer, this.numGuesses);
             System.out.println("ìììììììììììììììììììììììììììììì");
             for (int i = 0; i < this.strikes; ++i){
                 hangman += "\n              "+hangmanParts[i];

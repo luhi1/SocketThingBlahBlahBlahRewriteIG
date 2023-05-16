@@ -57,12 +57,16 @@ public class Host extends Thread{
         close();
     }
 
-    public void currentGame(Game g) throws Exception{
-        gameStarted = true;
+    public void currentGame(Game g, int playerIndex) throws Exception{
+        if (playerIndex == playerIPs.size()){
+            playerIndex = 0;
+        }
+
         if (this.guess.equals("home")){
             Game.clearScreen();
             return;
         }
+        g.setCurrentPlayer(playerIPs.get(playerIndex));
         g.displayScreen();
 
         Scanner guessReader = new Scanner(System.in);
@@ -70,7 +74,7 @@ public class Host extends Thread{
         this.guess = guessReader.nextLine();
 
         g.checkGuess(guess);
-        currentGame(g);
+        currentGame(g, playerIndex+1);
         
         guessReader.close();
     }
