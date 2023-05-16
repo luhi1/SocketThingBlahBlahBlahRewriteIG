@@ -1,11 +1,8 @@
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.stream.Collectors;
 
 public class Client{
     private Socket clientSocket;
@@ -19,7 +16,17 @@ public class Client{
             messagesIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         } catch (Exception e) {
             e.printStackTrace();
-            stop();
+        }
+    }
+
+    public void changeSocket(Socket s){
+        this.clientSocket = s;
+        try {
+            messagesOut = new PrintWriter(clientSocket.getOutputStream(), true);
+            messagesIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
     }
 
@@ -39,17 +46,6 @@ public class Client{
             System.out.println(resp.toString());    
         } catch (Exception e) {
             e.printStackTrace();
-            stop();
-        }
-    }
-
-    public void stop(){
-        try {
-                messagesIn.close();
-                messagesOut.close();
-                clientSocket.close();
-        } catch (IOException e) {
-                e.printStackTrace();
         }
     }
 }

@@ -64,15 +64,6 @@ public class Game implements Serializable{
         }
     }
 
-    public static void clearScreen() throws Exception{
-        try {
-            System.out.print("\033[H\033[2J");
-            System.out.flush();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     public void checkGuess(String guess){
         String spacedSecret = "";
         for (int i = 0; i < secretWord.length(); ++i){
@@ -96,5 +87,14 @@ public class Game implements Serializable{
             return;
         }
         this.strikes++;
+    }
+
+    public static void clearScreen() throws Exception{
+        try {
+            System.out.print("\033[H\033[2J");
+            System.out.flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

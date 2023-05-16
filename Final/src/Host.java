@@ -1,15 +1,14 @@
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 
-public class Host{
+public class Host extends Thread{
     private String guess;
     private PrintWriter messagesOut;
     private ObjectOutputStream gameOut;
@@ -27,7 +26,6 @@ public class Host{
         try {
             this.guess = "";
             messagesOut = new PrintWriter(HostServerSocket.getOutputStream(), true);
-            //gameIn = new ObjectInputStream(HostServerSocket.getInputStream());
 
         } catch (IOException e) {
             e.printStackTrace(System.out);
@@ -35,7 +33,7 @@ public class Host{
         }
     }
 
-    public void initHostServer(){
+    public void run(){
         try {
             HostingSocket = new ServerSocket(Server.serverPort+1);
         } catch (IOException e) {
@@ -59,23 +57,8 @@ public class Host{
         close();
     }
 
-    public void startGame(){
-            messagesOut.println("start");
-            //Println = send the message, scanner reading is just like user input!
-            Game resp;
-            try {
-                    resp = (Game) gameIn.readObject();
-                    this.currentGame(resp);
-            } catch (Exception e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                    close();
-
-            }
-            close();
-    }
-
     public void currentGame(Game g) throws Exception{
+        gameStarted = true;
         if (this.guess.equals("home")){
             Game.clearScreen();
             return;
@@ -95,8 +78,6 @@ public class Host{
     private void close(){
         messagesOut.close();
         try {
-            gameIn.close();
-            gameOut.close();
             HostingSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -109,32 +90,25 @@ public class Host{
         public HostClientHandler(Socket socket){
                 super(socket);
                 this.clientIP = super.clientServerSocket.getInetAddress().getHostAddress();
+                playerIPs.add(clientIP);
             
         }
 
         protected void closeConnectionsAndGameStreamsAndRemoveIP(){
             super.closeConnections();
             playerIPs.remove(clientIP);
-            try {
-                gameIn.close();
-                gameOut.close();
-
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
         }
 
         public void readRequestAndRespond(){
                 try {
-                        String hostServerRequests = null;
+                        String hostServerRequests = "";
                         
                         while (!hostServerRequests.equals("goTime")){
                             hostServerRequests = messagesIn.readLine();
                             messagesOut.println("Waiting for game to start");
                         }
 
-                        startGame();
+                        messagesOut.println("start");
                         messagesOut.flush();
                         //Get them into the game and start it up
                         closeConnectionsAndGameStreamsAndRemoveIP();
