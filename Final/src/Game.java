@@ -1,3 +1,4 @@
+import java.io.PrintWriter;
 import java.io.Serializable;
 
 public class Game implements Serializable{
@@ -25,16 +26,20 @@ public class Game implements Serializable{
         this.currentPlayer = player;
     }
 
-    public void displayScreen() throws Exception{
+    public String getCurrentPlayer(){
+        return this.currentPlayer;
+    }
+
+    public void displayScreen(PrintWriter outputStream) throws Exception{
         clearScreen();
         hangman = "";
         if (strikes == 5){
-            System.out.println("You lost! The hangman got buried.");
+            outputStream.println("You lost! The hangman got buried.");
             for (int i = this.strikes-1; i >= 0; i--){
                 hangman += "\n              "+hangmanParts[i];
             }
-            System.out.println(hangman);
-            System.out.println("Type \"home\" to return to the menu.");
+            outputStream.println(hangman);
+            outputStream.println("Type \"home\" to return to the menu.");
             return;
 
         }
@@ -43,20 +48,21 @@ public class Game implements Serializable{
             spacedSecret += secretWord.charAt(i) + " ";
         }
         if (spacedSecret.equals(guessString)){
-            System.out.println("GG You Won!");
-            System.out.println("Type \"home\" to return to the menu.");
+            outputStream.println("GG You Won!");
+            outputStream.println("Type \"home\" to return to the menu.");
             return;
         }
         try {
-            System.out.println("ìììììììììììììììììììììììììììììì");
+            outputStream.println("ìììììììììììììììììììììììììììììì");
 
-            System.out.printf("CurrentPlayer: %s; Guesses: %d\n", this.currentPlayer, this.numGuesses);
-            System.out.println("ìììììììììììììììììììììììììììììì");
+            outputStream.printf("CurrentPlayer: %s; Guesses: %d\n", this.currentPlayer, this.numGuesses);
+            outputStream.println("ìììììììììììììììììììììììììììììì");
             for (int i = 0; i < this.strikes; ++i){
                 hangman += "\n              "+hangmanParts[i];
             }
-            System.out.println(hangman);
-            System.out.println(guessString);
+            outputStream.println(hangman);
+            outputStream.println(guessString);
+            outputStream.println("This game is so cool!");
         } catch (Exception e) {
             e.printStackTrace();
         }

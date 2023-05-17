@@ -30,22 +30,28 @@ public class Client{
         }
     }
 
-    public void sendMessage(String message, String terminator){
+    public String sendMessage(String message, String terminator){
         messagesOut.println(message);
         try {
             Game.clearScreen();
             StringBuilder resp = new StringBuilder();
             String line;
-            while( (line = messagesIn.readLine()) != null) {
+            while( (line = messagesIn.readLine()) != null && line != "") {
                 resp.append(line);
                 resp.append("\n");
-                if (resp.toString().contains(terminator)){
+                if (line.contains(terminator)){
                     break;
                 }
+                System.out.println("die");
             }
-            System.out.println(resp.toString());    
+            String sresp = resp.toString();
+            if (!sresp.equals("") && sresp != null){
+                System.out.println(sresp);    
+            }
+            return resp.toString();
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return "";
     }
 }

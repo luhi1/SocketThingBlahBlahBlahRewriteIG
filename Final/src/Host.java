@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -14,6 +15,7 @@ public class Host extends Thread{
     private ObjectOutputStream gameOut;
     private ObjectInputStream gameIn;
     private ArrayList<String> playerIPs;
+    private HashMap<String, PrintWriter> playersAndOutputs;
     private Socket HostServerSocket;
     private ServerSocket HostingSocket; 
     private Boolean gameStarted;
@@ -21,12 +23,14 @@ public class Host extends Thread{
     public Host(Socket socket){
         this.playerIPs = new ArrayList<String>();
         this.HostServerSocket = socket;
+        this.playersAndOutputs = new HashMap<>();
         playerIPs.add(HostServerSocket.getInetAddress().getHostAddress());
         this.gameStarted = false;
 
         try {
             this.guess = "";
             messagesOut = new PrintWriter(HostServerSocket.getOutputStream(), true);
+            playersAndOutputs.put(playerIPs.get(0), messagesOut);
 
         } catch (IOException e) {
             e.printStackTrace(System.out);
@@ -68,16 +72,22 @@ public class Host extends Thread{
             return;
         }
         g.setCurrentPlayer(playerIPs.get(playerIndex));
-        g.displayScreen();
-
-        Scanner guessReader = new Scanner(System.in);
-        System.out.println("Type here: ");
-        this.guess = guessReader.nextLine();
-
+        for (String player: playerIPs){
+            g.displayScreen(playersAndOutputs.get(player));
+            if (player == g.getCurrentPlayer()){
+                playersAndOutputs.get(player).println("Type your guess here:");
+                int counter = 0;
+                while (!guess.contains("Guess:")){
+                    counter++;
+                    if (counter == 10000000){
+                        guess = "";
+                        break;
+                    }
+                }
+            }
+        }
         g.checkGuess(guess);
         currentGame(g, playerIndex+1);
-        
-        guessReader.close();
     }
 
     private void close(){
@@ -87,6 +97,7 @@ public class Host extends Thread{
         } catch (IOException e) {
             e.printStackTrace();
         }
+        
     }
 
     private class HostClientHandler extends Handler{
@@ -96,25 +107,33 @@ public class Host extends Thread{
                 super(socket);
                 this.clientIP = super.clientServerSocket.getInetAddress().getHostAddress();
                 playerIPs.add(clientIP);
-            
+                playersAndOutputs.put(clientIP, super.messagesOut);
         }
 
         protected void closeConnectionsAndGameStreamsAndRemoveIP(){
             super.closeConnections();
             playerIPs.remove(clientIP);
+            playersAndOutputs.remove(clientIP);
         }
 
         public void readRequestAndRespond(){
                 try {
                         String hostServerRequests = "";
-                        
-                        while (!hostServerRequests.equals("goTime")){
+                        messagesOut.println("Waiting for game to start");
+                        while (!gameStarted){
                             hostServerRequests = messagesIn.readLine();
-                            messagesOut.println("Waiting for game to start");
+                            if (messagesIn.readLine().equals("check")){
+                                messagesOut.println("");
+                            }
                         }
-
-                        messagesOut.println("start");
                         messagesOut.flush();
+                        do {
+                            if (!hostServerRequests.contains("Guess:")){
+                                hostServerRequests = messagesIn.readLine();
+                                continue;
+                            } 
+
+                        } while (!(hostServerRequests.contains("Guess:")));
                         //Get them into the game and start it up
                         closeConnectionsAndGameStreamsAndRemoveIP();
 

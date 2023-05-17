@@ -12,7 +12,12 @@ public class App {
             if(resp.contains("Join:")){
                 myClient.changeSocket(new Socket(resp.replace("Join:", ""), Server.serverPort+1));
                 myClient.sendMessage("", "Waiting for game to start");
-                break;
+                while (!myClient.sendMessage("check", "This game is so cool!").equals("This game is so cool!")){
+                    System.out.println("Yo please");
+                }
+                //if (!resp.equals("list")){
+                 //   break;
+                //}
             }
             switch (resp) {
                 case "list":
@@ -42,12 +47,7 @@ public class App {
             }
         } while (!resp.equals("quit"));
 
-        if (resp.contains("Join:")){
-            resp = "";
-            do {
-                continue;
-            } while (!resp.equals("quit"));
-        }
+        
         myScanner.close();
     }
 }
