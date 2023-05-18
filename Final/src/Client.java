@@ -19,7 +19,7 @@ public class Client{
         }
     }
 
-    public void changeSocket(Socket s){
+    public boolean changeSocket(Socket s){
         this.clientSocket = s;
         try {
             messagesOut = new PrintWriter(clientSocket.getOutputStream(), true);
@@ -27,7 +27,20 @@ public class Client{
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+            return false;
         }
+        return true;
+    }
+
+    public void gameCommunicator() throws IOException{
+        messagesOut.println("check");
+        while (messagesIn.readLine().equals("Waiting for game to start")){
+            messagesOut.println("check");
+            messagesOut.flush();
+            System.out.println("Waiting for game to start.");
+        }
+
+        
     }
 
     public void sendMessage(String message, String terminator){

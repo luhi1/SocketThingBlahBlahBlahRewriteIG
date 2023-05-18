@@ -1,22 +1,17 @@
 import java.util.ArrayList;
-import java.util.Scanner;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 
 public class Host extends Thread{
     private String guess;
     private PrintWriter messagesOut;
-    private ObjectOutputStream gameOut;
-    private ObjectInputStream gameIn;
     private ArrayList<String> playerIPs;
     private Socket HostServerSocket;
     private ServerSocket HostingSocket; 
     private Boolean gameStarted;
+    private Game game;
     
     public Host(Socket socket){
         this.playerIPs = new ArrayList<String>();
@@ -51,15 +46,22 @@ public class Host extends Thread{
                 close();
 
             }
-            // new thread for a client
-            HostClientHandler newHostClientHandler = new HostClientHandler(newSocketConnection);
-            new Thread(newHostClientHandler).start();
+
+            //One player can join after the game starts, that's what this if statement avoids.
+            if (!gameStarted){
+                // new thread for a client
+                HostClientHandler newHostClientHandler = new HostClientHandler(newSocketConnection);
+                new Thread(newHostClientHandler).start();
+            }
+            
         }
         close();
     }
 
     public void currentGame(Game g, int playerIndex) throws Exception{
-        if (playerIndex == playerIPs.size()){
+        this.game = g;
+        guess = "";
+        if (playerIndex == playerIPs.size()-1){
             playerIndex = 0;
         }
 
@@ -67,17 +69,22 @@ public class Host extends Thread{
             Game.clearScreen();
             return;
         }
-        g.setCurrentPlayer(playerIPs.get(playerIndex));
-        g.displayScreen();
 
-        Scanner guessReader = new Scanner(System.in);
-        System.out.println("Type here: ");
-        this.guess = guessReader.nextLine();
+        this.game.setCurrentPlayer(playerIPs.get(playerIndex));
+        while (guess.equals("")){
+            wait(10000);
+            if (guess.equals("")){
+                guess = "noInput";
+            }
+        }
 
-        g.checkGuess(guess);
-        currentGame(g, playerIndex+1);
-        
-        guessReader.close();
+        if (guess.equals("noInput")){
+            currentGame(this.game, playerIndex+1);        
+            return;
+        }
+
+        this.game.checkGuess(guess);
+        currentGame(this.game, playerIndex+1);
     }
 
     private void close(){
@@ -105,17 +112,28 @@ public class Host extends Thread{
         }
 
         public void readRequestAndRespond(){
-                try {
-                        String hostServerRequests = "";
-                        
-                        while (!hostServerRequests.equals("goTime")){
-                            hostServerRequests = messagesIn.readLine();
+                try {                        
+                        while (!gameStarted){
                             messagesOut.println("Waiting for game to start");
+                            messagesOut.flush();
                         }
 
-                        messagesOut.println("start");
-                        messagesOut.flush();
-                        //Get them into the game and start it up
+                        String hostServerRequests = "";
+
+                        do {
+                            if (clientIP.equals(game.getCurrentPlayer())){
+                                messagesOut.println("Type your guess here:");
+                                while (hostServerRequests == null){
+                                    if (!clientIP.equals(game.getCurrentPlayer())){
+                                        break;
+                                    }
+                                    hostServerRequests = messagesIn.readLine();
+                                }
+                            } else {
+                                game.displayScreen(messagesOut);
+                            }
+
+                        } while (!guess.equals("home"));
                         closeConnectionsAndGameStreamsAndRemoveIP();
 
                 } catch (Exception e) {

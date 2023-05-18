@@ -10,8 +10,12 @@ public class App {
         do {
             resp = myScanner.nextLine();
             if(resp.contains("Join:")){
-                myClient.changeSocket(new Socket(resp.replace("Join:", ""), Server.serverPort+1));
-                myClient.sendMessage("", "Waiting for game to start");
+                if (myClient.changeSocket(new Socket(resp.replace("Join:", ""), Server.serverPort+1))){
+                    myClient.gameCommunicator();
+                } else {
+                    System.out.println("Invalid Game IP");
+                }
+                //Error Handling?
                 break;
             }
             switch (resp) {
@@ -26,8 +30,6 @@ public class App {
                     while (!resp.contentEquals("start") && !resp.contentEquals("quit")){
                         System.out.println("Type \"start\" to start the game.");
                         resp = myScanner.nextLine();
-                        System.out.println(resp);
-                        System.out.println(resp.contentEquals("start"));
                     }
                     myClient.sendMessage(resp, "");
                     break;
@@ -42,12 +44,6 @@ public class App {
             }
         } while (!resp.equals("quit"));
 
-        if (resp.contains("Join:")){
-            resp = "";
-            do {
-                continue;
-            } while (!resp.equals("quit"));
-        }
         myScanner.close();
     }
 }

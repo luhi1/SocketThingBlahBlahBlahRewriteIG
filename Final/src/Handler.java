@@ -35,6 +35,8 @@ public abstract class Handler extends Thread{
 
     abstract void readRequestAndRespond();
     
+    //To get the method above to run when the thread is created. 
+    //Could I have done "abstract void run();" maybe, but I think the naming makes more sense to a reader this way.
     public void run(){
         readRequestAndRespond();
     }
